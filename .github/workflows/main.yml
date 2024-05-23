@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
     - name: Check out the repository
@@ -37,7 +38,11 @@ jobs:
         push: true
         tags: ghcr.io/bitdragon50/base-fxn:latest #${{ github.repository_owner }}
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     defaults:
       run:
         shell: bash
