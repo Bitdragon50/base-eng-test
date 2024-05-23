@@ -54,3 +54,15 @@ variable "log_level" {
   type        = string
   default     = "INFO"
 }
+
+variable "filepath" {
+  description = "The path to the lambda fxn source code."
+  type        = string
+  default     = "./src"  
+}
+
+variable "environment" {
+  description = "The SDLC environment we are deploying into."
+  type        = string
+  default     = "npe"  
+}
