@@ -1,7 +1,7 @@
 variable "region" {
   description = "The AWS region to deploy to."
   type        = string
-  default     = "europe-west2"
+  default     = "eu-west-2"
 }
 
 variable "package_type" {
@@ -37,7 +37,7 @@ variable "timeout" {
 variable "function_name" {
   description = "The name of the Lambda Function."
   type        = string
-  default     = null
+  default     = "chatting-api"
 }
 
 variable "function_handler" {
