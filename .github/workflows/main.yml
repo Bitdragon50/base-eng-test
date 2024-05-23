@@ -33,7 +33,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile
+        file: ../src/Dockerfile
         push: true
         tags: ghcr.io/bitdragon50/base-fxn:latest #${{ github.repository_owner }}
   deploy:
@@ -41,7 +41,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./infrastructure
+        working-directory: ../infrastructure
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
