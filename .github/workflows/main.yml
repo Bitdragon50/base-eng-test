@@ -48,6 +48,8 @@ jobs:
     - name: Set the tag
       id: set_tag
       run: echo "::set-output name=tag_name::ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
+    outputs:
+        tag_name: ${{ steps.set_tag.outputs.tag_name }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
