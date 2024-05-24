@@ -31,7 +31,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Convert string to lowercase
       id: lowercase
-      run: echo "lowercase_repo_owner=$(echo ${{ github.repository_owner }}.toLowerCase())" >> $GITHUB_ENV
+      run: |
+        lowercase_repo_owner="$(echo '${{ github.repository_owner }}'.toLowerCase())"
+        echo "lowercase_repo_owner=$lowercase_repo_owner" >> $GITHUB_ENV
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
