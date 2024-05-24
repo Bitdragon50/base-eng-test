@@ -106,10 +106,10 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Terraform Apply
+      - name: Terraform Destroy
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          terraform apply -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+          terraform destroy -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
-          terraform output api_endpoint
+          
           echo "============================== API ENDPOINT ABOVE ==================================="
