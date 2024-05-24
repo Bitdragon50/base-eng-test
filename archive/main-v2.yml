@@ -14,10 +14,6 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./src
     permissions:
       contents: read
       packages: write
@@ -27,32 +23,33 @@ jobs:
     - name: Check out the repository
       uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-  
-    - name: Package Lambda function
-      run: zip -r function.zip .
-
-    - name: Configure AWS credentials from AWS account
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
       with:
-        role-to-assume: ${{ secrets.ACTION_ROLE }}
-        aws-region: ${{ secrets.REGION }}
-
-    - name: Deploy to S3
-      run: aws s3 cp function.zip s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip
-    
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: Convert string to lowercase
       id: lowercase
       run: |
-          echo "filepath=$(echo s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip)" >> $GITHUB_ENV
+        echo "lowercase_repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+    - name: Debug lowercase variable
+      run: |
+        echo "Lowercase repo owner: $lowercase_repo_owner"
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./src/Dockerfile
+        push: true
+        tags: "ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
     - name: Set the tag
       id: set_tag
-      run: echo "::set-output name=filepath::$filepath"
+      run: echo "::set-output name=tag_name::ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
     outputs:
-        filepath: ${{ steps.set_tag.outputs.filepath }}
+        tag_name: ${{ steps.set_tag.outputs.tag_name }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
@@ -98,7 +95,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
+        run: terraform plan -no-color -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}"
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         continue-on-error: true
 
@@ -108,4 +105,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+        run: terraform apply -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}" -auto-approve -input=false
