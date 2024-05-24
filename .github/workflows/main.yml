@@ -6,9 +6,9 @@ on:
       - main
   pull_request:
 permissions:
-      id-token: write # This is required for aws oidc connection
-      contents: read # This is required for actions/checkout
-      pull-requests: write # This is required for gh bot to comment PR
+      id-token: write 
+      contents: read 
+      pull-requests: write 
 env:
   TF_LOG: INFO
 jobs:
@@ -48,11 +48,11 @@ jobs:
       run: |
           echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_ENV
 
-    - name: Set the tag
-      id: set_tag
+    - name: Set the path
+      id: set_path
       run: echo "::set-output name=filepath::$filepath"
     outputs:
-        filepath: ${{ steps.set_tag.outputs.filepath }}
+        filepath: ${{ steps.set_path.outputs.filepath }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
