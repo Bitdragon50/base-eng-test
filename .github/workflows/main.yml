@@ -92,7 +92,10 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init 
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.STATE_BUCKET }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
       - name: Terraform Validate
         id: validate
@@ -100,7 +103,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -var "filepath=$filepath" -input=false
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         continue-on-error: true
 
@@ -111,7 +114,7 @@ jobs:
       - name: Terraform apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          terraform apply -auto-approve -input=false
+          terraform apply -var "filepath=$filepath" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
           terraform output api_endpoint
           echo "============================== API ENDPOINT ABOVE ==================================="

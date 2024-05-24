@@ -8,17 +8,10 @@ terraform {
     }
   }
 
-  backend "remote" {
-    hostname     = "app.terraform.io"
-    organization = "base-mc-test"
-
-    workspaces {
-      name = "base-eng-test"
-    }
-  }
+  backend "s3" { }
 }
 
 
 provider "aws" {
-  region = "eu-west-2"
+  region = var.region
 }
