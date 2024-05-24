@@ -84,6 +84,13 @@ jobs:
         run: terraform fmt -check 
         continue-on-error: true
 
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM   
+
       - name: Terraform Init
         id: init
         run: terraform init
@@ -91,6 +98,13 @@ jobs:
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM   
 
       - name: Terraform Plan
         id: plan
@@ -104,6 +118,13 @@ jobs:
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM   
 
       - name: Terraform apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
