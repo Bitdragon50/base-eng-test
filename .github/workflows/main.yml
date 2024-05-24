@@ -60,6 +60,9 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    env:
+      TFE_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+      TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
     defaults:
       run:
         shell: bash
@@ -88,9 +91,6 @@ jobs:
 
       - name: Terraform Init
         id: init
-        env:
-          TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
         run: terraform init 
 
       - name: Terraform Validate
