@@ -72,17 +72,17 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v3
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.3
+
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }}
           aws-region: ${{ secrets.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.3
           
 
       - name: Terraform fmt
