@@ -46,7 +46,7 @@ jobs:
     - name: Pass source code path
       id: pass_path
       run: |
-          echo "filepath=$(echo s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip)" >> $GITHUB_ENV
+          echo "filepath=$(echo ${{ secrets.FUNCTION_BUCKET }})" >> $GITHUB_ENV
 
     - name: Set the tag
       id: set_tag
