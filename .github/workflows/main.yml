@@ -44,7 +44,7 @@ jobs:
         context: .
         file: ./src/Dockerfile
         push: true
-        tags: ghcr.io/$lowercase_repo_owner/base-fxn:latest
+        tags: "ghcr.io/$lowercase_repo_owner/base-fxn:latest"
     - name: Set the tag
       id: set_tag
       run: echo "TAG_NAME=$(echo 'ghcr.io/$lowercase_repo_owner/base-fxn:latest')" >> $GITHUB_ENV
