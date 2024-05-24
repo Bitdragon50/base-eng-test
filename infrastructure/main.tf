@@ -6,8 +6,10 @@ resource "aws_lambda_function" "event_handler" {
   runtime       = var.runtime
   publish       = var.publish
   architectures = var.architectures
-  filename      = var.filepath
   timeout       = var.timeout
+  s3_bucket = var.filepath
+  s3_key    = "${var.environment}/function.zip"
+
 
   environment {
     variables = {
