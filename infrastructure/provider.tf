@@ -7,8 +7,14 @@ terraform {
       version = ">= 5.0.0"
     }
   }
-  backend "s3" {
 
+  backend "remote" {
+    hostname     = "app.terraform.io"
+    organization = "base-mc-test"
+
+    workspaces {
+      name = "base-eng-test"
+    }
   }
 }
 
