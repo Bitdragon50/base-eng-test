@@ -41,12 +41,12 @@ jobs:
         aws-region: ${{ secrets.REGION }}
 
     - name: Deploy to S3
-      run: aws s3 cp function.zip s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip
+      run: aws s3 cp function.zip s3://${{ env.FUNCTION_BUCKET }}/npe/function.zip
     
     - name: Pass source code path
       id: pass_path
       run: |
-          echo "filepath=$(echo ${{ secrets.FUNCTION_BUCKET }})" >> $GITHUB_ENV
+          echo "filepath=$(echo ${{ env.FUNCTION_BUCKET }})" >> $GITHUB_ENV
 
     - name: Set the tag
       id: set_tag

@@ -7,7 +7,6 @@ resource "aws_lambda_function" "event_handler" {
   publish       = var.publish
   architectures = var.architectures
   timeout       = var.timeout
-
   s3_bucket = var.filepath
   s3_key    = "${var.environment}/function.zip"
 
