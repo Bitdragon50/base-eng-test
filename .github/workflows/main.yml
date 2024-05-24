@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v2
@@ -29,6 +29,14 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Convert string to lowercase
+      id: lowercase
+      run: |
+        echo "lowercase_repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+    - name: Debug lowercase variable
+      run: |
+        echo "Lowercase repo owner: $lowercase_repo_owner"
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
@@ -36,8 +44,14 @@ jobs:
         context: .
         file: ./src/Dockerfile
         push: true
-        tags: ghcr.io/bitdragon50/base-fxn:latest #${{ github.repository_owner }}
+        tags: "ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
+    - name: Set the tag
+      id: set_tag
+      run: echo "::set-output name=tag_name::ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
+    outputs:
+        tag_name: ${{ steps.set_tag.outputs.tag_name }}
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest    
     permissions:
       contents: read
@@ -81,7 +95,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: terraform plan -no-color -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 

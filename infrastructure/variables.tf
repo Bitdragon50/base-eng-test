@@ -37,7 +37,7 @@ variable "timeout" {
 variable "function_name" {
   description = "The name of the Lambda Function."
   type        = string
-  default     = "chatting-api"
+  default     = "chatting_api"
 }
 
 variable "function_handler" {
@@ -68,4 +68,9 @@ variable "environment" {
   description = "The SDLC environment we are deploying into."
   type        = string
   default     = "npe"
+}
+
+variable "image_uri" {
+  description = "The uri of the container image, set during build in github actions."
+  type        = string
 }
