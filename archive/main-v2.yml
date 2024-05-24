@@ -23,25 +23,31 @@ jobs:
     - name: Check out the repository
       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials from AWS account
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
       with:
-        role-to-assume: ${{ secrets.ACTION_ROLE }}
-        aws-region: ${{ secrets.REGION }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Convert string to lowercase
+      id: lowercase
+      run: |
+        echo "lowercase_repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-    - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
-  
-    - name: Build, tag, and push image to Amazon ECR
+    - name: Debug lowercase variable
+      run: |
+        echo "Lowercase repo owner: $lowercase_repo_owner"
+
+    - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile
+        file: ./src/Dockerfile
         push: true
-        tags: ${{ secrets.ACCOUNT_ID }}.dkr.ecr.${{ secrets.REGION}}.amazonaws.com/base-fxn:latest
+        tags: "ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
     - name: Set the tag
       id: set_tag
-      run: echo "::set-output name=tag_name::${{ secrets.ACCOUNT_ID }}.dkr.ecr.${{ secrets.REGION}}.amazonaws.com/base-fxn:latest"
+      run: echo "::set-output name=tag_name::ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
     outputs:
         tag_name: ${{ steps.set_tag.outputs.tag_name }}
   deploy:
