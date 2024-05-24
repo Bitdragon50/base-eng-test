@@ -14,6 +14,10 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./src
     permissions:
       contents: read
       packages: write
@@ -23,27 +27,27 @@ jobs:
     - name: Check out the repository
       uses: actions/checkout@v3
 
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+  
+    - name: Package Lambda function
+      run: zip -r function.zip .
+
     - name: Configure AWS credentials from AWS account
       uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: ${{ secrets.ACTION_ROLE }}
         aws-region: ${{ secrets.REGION }}
 
-    - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
-  
-    - name: Build, tag, and push image to Amazon ECR
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./src/Dockerfile
-        push: true
-        tags: ${{ secrets.ACCOUNT_ID }}.dkr.ecr.${{ secrets.REGION}}.amazonaws.com/base-fxn:latest
+    - name: Deploy to S3
+      run: aws s3 cp function.zip s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip
+
     - name: Set the tag
       id: set_tag
-      run: echo "::set-output name=tag_name::${{ secrets.ACCOUNT_ID }}.dkr.ecr.${{ secrets.REGION}}.amazonaws.com/base-fxn:latest"
+      run: echo "::set-output name=filepath::s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip"
     outputs:
-        tag_name: ${{ steps.set_tag.outputs.tag_name }}
+        filepath: ${{ steps.set_tag.outputs.filepath }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
@@ -89,7 +93,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}"
+        run: terraform plan -no-color -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         continue-on-error: true
 
@@ -99,4 +103,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}" -auto-approve -input=false
+        run: terraform apply -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false

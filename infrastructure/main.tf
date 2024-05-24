@@ -2,8 +2,7 @@ resource "aws_lambda_function" "event_handler" {
   function_name = "${var.function_name}_${var.environment}"
   role          = aws_iam_role.event_handler_execution_role.arn
   handler       = var.function_handler
-  package_type  = "Image"
-  image_uri     = var.image_uri
+  package_type  = var.package_type
   runtime       = var.runtime
   publish       = var.publish
   architectures = var.architectures

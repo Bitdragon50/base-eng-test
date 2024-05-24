@@ -59,9 +59,9 @@ variable "log_level" {
 }
 
 variable "filepath" {
-  description = "The path to the lambda fxn source code."
+  description = "The path to the lambda function source code."
   type        = string
-  default     = "./src"
+  default     = null
 }
 
 variable "environment" {
@@ -74,3 +74,11 @@ variable "image_uri" {
   description = "The uri of the container image, set during build in github actions."
   type        = string
 }
+
+/*
+variable "function_bucket" {
+  description = "The uri of the container image, set during build in github actions."
+  type        = string
+
+}
+*/
