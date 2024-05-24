@@ -42,10 +42,15 @@ jobs:
 
     - name: Deploy to S3
       run: aws s3 cp function.zip s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip
+    
+    - name: Convert string to lowercase
+      id: lowercase
+      run: |
+          echo "filepath=$(echo s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip)" >> $GITHUB_ENV
 
     - name: Set the tag
       id: set_tag
-      run: echo "::set-output name=filepath::s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip"
+      run: echo "::set-output name=filepath::$filepath"
     outputs:
         filepath: ${{ steps.set_tag.outputs.filepath }}
   deploy:
