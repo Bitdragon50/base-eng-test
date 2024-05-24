@@ -17,7 +17,3 @@ terraform {
     }
   }
 }
-
-
-provider "aws" {
-}
