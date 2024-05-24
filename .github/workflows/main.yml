@@ -52,6 +52,7 @@ jobs:
     outputs:
       tag_name: ${{ steps.set_tag.outputs.TAG_NAME }}
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest    
     permissions:
       contents: read
