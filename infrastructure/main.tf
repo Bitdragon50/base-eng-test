@@ -12,7 +12,7 @@ resource "aws_lambda_function" "event_handler" {
 
   environment {
     variables = {
-      POWERTOOLS_SERVICE_NAME = var.powertools_service_name
+      POWERTOOLS_SERVICE_NAME = "${var.function_name}_${var.environment}"
       LOG_LEVEL               = var.log_level
     }
   }
