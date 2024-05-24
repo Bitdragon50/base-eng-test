@@ -69,3 +69,8 @@ variable "environment" {
   type        = string
   default     = "npe"
 }
+
+variable "image_uri" {
+  description = "The uri of the container image, set during build in github actions."
+  type        = string
+}
