@@ -6,8 +6,8 @@ resource "aws_lambda_function" "event_handler" {
   runtime       = var.runtime
   publish       = var.publish
   architectures = var.architectures
-
-  timeout = var.timeout
+  filename      = var.filepath
+  timeout       = var.timeout
 
   environment {
     variables = {
