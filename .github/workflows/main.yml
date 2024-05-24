@@ -47,10 +47,7 @@ jobs:
         tags: "ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
     - name: Set the tag
       id: set_tag
-      run: echo "TAG_NAME=$(echo 'ghcr.io/$lowercase_repo_owner/base-fxn:latest')" >> $GITHUB_ENV
-        # Other steps
-    outputs:
-      tag_name: ${{ steps.set_tag.outputs.TAG_NAME }}
+      run: echo "::set-output name=tag_name::ghcr.io/${{ env.lowercase_repo_owner }}/base-fxn:latest"
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
@@ -96,7 +93,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "image_uri=${{ needs.build.outputs.tag_name }}"
+        run: terraform plan -no-color -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 
