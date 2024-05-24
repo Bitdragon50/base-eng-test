@@ -1,6 +1,7 @@
 variable "region" {
   description = "The AWS region to deploy to."
   type        = string
+  default     = "eu-west-2"
 }
 
 variable "package_type" {
@@ -36,6 +37,7 @@ variable "timeout" {
 variable "function_name" {
   description = "The name of the Lambda Function."
   type        = string
+  default     = "chatting_api"
 }
 
 variable "function_handler" {
@@ -45,12 +47,30 @@ variable "function_handler" {
 }
 
 variable "powertools_service_name" {
-  description = "The name of the service."
+  description = "Sets service name used for tracing namespace, metrics dimension and structured logging."
   type        = string
+  default     = null
 }
 
 variable "log_level" {
   description = "The log level for the function."
   type        = string
   default     = "INFO"
+}
+
+variable "filepath" {
+  description = "The path to the lambda fxn source code."
+  type        = string
+  default     = "./src"
+}
+
+variable "environment" {
+  description = "The SDLC environment we are deploying into."
+  type        = string
+  default     = "npe"
+}
+
+variable "image_uri" {
+  description = "The uri of the container image, set during build in github actions."
+  type        = string
 }
