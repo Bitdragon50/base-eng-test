@@ -9,6 +9,10 @@ resource "aws_lambda_function" "event_handler" {
   filename      = var.filepath
   timeout       = var.timeout
 
+  s3_bucket = var.filepath
+  s3_key    = "${var.environment}/function.zip"
+
+
   environment {
     variables = {
       POWERTOOLS_SERVICE_NAME = "${var.function_name}_${var.environment}"

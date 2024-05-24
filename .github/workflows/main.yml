@@ -43,8 +43,8 @@ jobs:
     - name: Deploy to S3
       run: aws s3 cp function.zip s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip
     
-    - name: Convert string to lowercase
-      id: lowercase
+    - name: Pass source code path
+      id: pass_path
       run: |
           echo "filepath=$(echo s3://${{ secrets.FUNCTION_BUCKET }}/npe/function.zip)" >> $GITHUB_ENV
 
