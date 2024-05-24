@@ -61,7 +61,7 @@ variable "log_level" {
 variable "filepath" {
   description = "The path to the lambda function source code."
   type        = string
-  default     = null
+  default     = "base-eng-fxn-bucket"
 }
 
 variable "environment" {
