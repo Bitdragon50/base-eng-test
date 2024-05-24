@@ -32,7 +32,7 @@ jobs:
     - name: Convert string to lowercase
       id: lowercase
       run: |
-        lowercase_repo_owner="$(echo '${{ github.repository_owner }}'.toLowerCase())"
+        lowercase_repo_owner="$(echo '${{ github.repository_owner }}')".toLowerCase()
         echo "lowercase_repo_owner=$lowercase_repo_owner" >> $GITHUB_ENV
 
     - name: Build and push Docker image
