@@ -105,4 +105,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -var "image_uri=${{ needs.build-and-push.outputs.tag_name }}" -auto-approve -input=false
