@@ -43,23 +43,24 @@ jobs:
       run: zip -r function.zip .
 
     - name: Set env vars
+      id: set_env
       run: |
         if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          echo "state_bucket=$(echo ${{ secrets.NPE_STATE_BUCKET }})" >> $GITHUB_ENV
-          echo "git_branch=$(echo ${{ github.ref_name }})" >> $GITHUB_ENV
-          echo "environment=$(echo npe)" >> $GITHUB_ENV
+          echo "state_bucket=$(echo ${{ secrets.NPE_STATE_BUCKET }})" >> $GITHUB_OUTPUT
+          echo "git_branch=$(echo ${{ github.ref_name }})" >> $GITHUB_OUTPUT
+          echo "environment=$(echo npe)" >> $GITHUB_OUTPUT
         elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
-          echo "state_bucket=${{ secrets.UAT_STATE_BUCKET }}" >> $GITHUB_ENV
-          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "environment=uat" >> $GITHUB_ENV
+          echo "state_bucket=${{ secrets.UAT_STATE_BUCKET }}" >> $GITHUB_OUTPUT
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "environment=uat" >> $GITHUB_OUTPUT
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          echo "state_bucket=${{ secrets.PROD_STATE_BUCKET }}" >> $GITHUB_ENV
-          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "environment=prd" >> $GITHUB_ENV
+          echo "state_bucket=${{ secrets.PROD_STATE_BUCKET }}" >> $GITHUB_OUTPUT
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "environment=prd" >> $GITHUB_OUTPUT
         else:
-          echo "state_bucket=$(echo ${{ secrets.NPE_STATE_BUCKET }})" >> $GITHUB_ENV
-          echo "git_branch=$(echo ${{ github.ref_name }})" >> $GITHUB_ENV
-          echo "environment=$(echo npe)" >> $GITHUB_ENV
+          echo "state_bucket=$(echo ${{ secrets.NPE_STATE_BUCKET }})" >> $GITHUB_OUTPUT
+          echo "git_branch=$(echo ${{ github.ref_name }})" >> $GITHUB_OUTPUT
+          echo "environment=npe" >> $GITHUB_OUTPUT
 
         fi
 
@@ -75,22 +76,22 @@ jobs:
     - name: Pass source code path
       id: pass_path
       run: |
-          echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_ENV
+          echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_OUTPUT
     - name: Set the path
       id: set_path
       run: |
-        echo "::set-output name=filepath::$filepath"
-        echo "::set-output name=state_bucket::$state_bucket"
-        echo "::set-output name=environment::$environment"
+        echo "name=filepath::$filepath" >> $GITHUB_OUTPUT
     - name: Debugging
+      env:
+        state_bucket : ${{ steps.set_env.outputs.state_bucket }}
       run: |
         echo "${{ steps.set_path.outputs.filepath }}"
-        echo "${{ steps.set_path.outputs.state_bucket }}"
-        echo "${{ steps.set_path.outputs.environment }}"
+        echo "$state_bucket"
+        echo "${{ steps.set_env.outputs.environment }}"
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
-        state_bucket: ${{ steps.set_path.outputs.state_bucket }}
-        environment: ${{ steps.set_path.outputs.environment }}
+        state_bucket: ${{ steps.set_env.outputs.state_bucket }}
+        environment: ${{ steps.set_env.outputs.environment }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
