@@ -82,13 +82,20 @@ jobs:
         echo "::set-output name=filepath::$filepath"
         echo "::set-output name=state_bucket::$state_bucket"
         echo "::set-output name=environment::$environment"
+    - name: Debugging
+      run: |
+        echo "${{ steps.set_path.outputs.filepath }}"
+        echo "${{ steps.set_path.outputs.state_bucket }}"
+        echo "${{ steps.set_path.outputs.environment }}"
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
         state_bucket: ${{ steps.set_path.outputs.state_bucket }}
         environment: ${{ steps.set_path.outputs.environment }}
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
+    env:
+      STATE_BUCKET: ${{ needs.build-and-push.outputs.state_bucket }}
     permissions:
       contents: read
       packages: write
@@ -121,7 +128,7 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: ${{ needs.build-and-push.outputs.state_bucket }}
+          AWS_BUCKET_NAME: ${{ env.STATE_BUCKET }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
