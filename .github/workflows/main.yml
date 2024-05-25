@@ -2,6 +2,7 @@ name: "Terraform action"
 on:
   push:
     branches:
+      - staging
       - develop
       - main
   pull_request:
