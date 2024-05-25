@@ -44,11 +44,7 @@ jobs:
 
     - name: Set env vars
       run: |
-        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-          echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
-          echo "environment=npe" >> $GITHUB_ENV
-          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+        if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
           echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "environment=npe" >> $GITHUB_ENV
