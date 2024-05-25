@@ -5,9 +5,8 @@ on:
       - staging
       - develop
       - main
-  #pull_request:
-   # branches:
-   #   - feature/*
+  pull_request:
+    
   workflow_dispatch:
     inputs:
       deploy_type:
@@ -157,7 +156,7 @@ jobs:
             })
 
       - name: Terraform Apply
-        if: contains(fromJson('["refs/heads/main", "refs/heads/staging", "refs/heads/develop"]'), github.ref)   && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'destroy')  )
+        if: contains(fromJson('["refs/heads/main", "refs/heads/staging", "refs/heads/develop"]'), github.ref)   && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'plan')  )
         run: |
           terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=${{ needs.build-and-push.outputs.environment }}" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
