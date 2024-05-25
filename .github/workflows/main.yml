@@ -45,9 +45,9 @@ jobs:
     - name: Set env vars
       run: |
         if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
-          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "environment=npe" >> $GITHUB_ENV
+          echo "state_bucket=$(echo ${{ secrets.NPE_STATE_BUCKET }})" >> $GITHUB_ENV
+          echo "git_branch=$(echo ${{ github.ref_name }})" >> $GITHUB_ENV
+          echo "environment=$(echo npe)" >> $GITHUB_ENV
         elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
           echo "state_bucket=${{ secrets.UAT_STATE_BUCKET }}" >> $GITHUB_ENV
           echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
