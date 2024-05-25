@@ -80,13 +80,13 @@ jobs:
     - name: Set the path
       id: set_path
       run: |
-        echo "name=filepath::$filepath" >> $GITHUB_OUTPUT
+        echo "name=$filepath" >> $GITHUB_OUTPUT
     - name: Debugging
       env:
         state_bucket : ${{ steps.set_env.outputs.state_bucket }}
       run: |
         echo "${{ steps.set_path.outputs.filepath }}"
-        echo "$state_bucket"
+        echo $state_bucket
         echo "${{ steps.set_env.outputs.environment }}"
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
