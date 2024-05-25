@@ -88,6 +88,8 @@ jobs:
         echo "::set-output name=environment::$environment"
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
+        state_bucket: ${{ steps.set_path.outputs.state_bucket }}
+        environment: ${{ steps.set_path.outputs.environment }}
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest    
