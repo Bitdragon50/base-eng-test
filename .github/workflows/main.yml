@@ -2,9 +2,18 @@ name: "Terraform action"
 on:
   push:
     branches:
+      - staging
       - develop
       - main
-  pull_request:
+  #pull_request:
+   # branches:
+   #   - feature/*
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'plan or apply or destroy?'
+        required: true
+        default: 'plan'    
 permissions:
       id-token: write 
       contents: read 
@@ -34,23 +43,50 @@ jobs:
     - name: Package Lambda function
       run: zip -r function.zip .
 
+    - name: Set env vars
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
+          echo "environment=npe" >> $GITHUB_ENV
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "environment=npe" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
+          echo "state_bucket=${{ secrets.UAT_STATE_BUCKET }}" >> $GITHUB_ENV
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "environment=uat" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "state_bucket=${{ secrets.PROD_STATE_BUCKET }}" >> $GITHUB_ENV
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "environment=prd" >> $GITHUB_ENV
+        else:
+          echo "state_bucket=${{ secrets.NPE_STATE_BUCKET }}" >> $GITHUB_ENV
+          echo "git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "environment=npe" >> $GITHUB_ENV
+
+        fi
+
     - name: Configure AWS credentials from AWS account
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v3
       with:
-        role-to-assume: ${{ secrets.ACTION_ROLE }}
+        role-to-assume: ${{ secrets.ACTION_ROLE }} 
         aws-region: ${{ secrets.REGION }}
 
     - name: Deploy to S3
-      run: aws s3 cp function.zip s3://${{ vars.FUNCTION_BUCKET }}/npe/function.zip
+      run: aws s3 cp function.zip s3://${{ vars.FUNCTION_BUCKET }}/$environment/${{ github.ref_name }}-function.zip
     
     - name: Pass source code path
       id: pass_path
       run: |
           echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_ENV
-
     - name: Set the path
       id: set_path
-      run: echo "::set-output name=filepath::$filepath"
+      run: |
+        echo "::set-output name=filepath::$filepath"
+        echo "::set-output name=state_bucket::$state_bucket"
+        echo "::set-output name=environment::$environment"
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
   deploy:
@@ -69,9 +105,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials from AWS account
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          role-to-assume: ${{ secrets.ACTION_ROLE }} # I would change the value in the set env vars step higher up
           aws-region: ${{ secrets.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
@@ -88,7 +124,7 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: ${{ secrets.STATE_BUCKET }}
+          AWS_BUCKET_NAME: ${{ needs.build-and-push.outputs.state_bucket }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
@@ -98,18 +134,40 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        run: terraform plan -no-color -var "environment=${{ needs.build-and-push.outputs.environment }}" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
+      - name: Comment Terraform Plan on PR
+        if: github.event_name == 'pull_request' && steps.plan.outcome != 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('plan-output.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### Terraform Plan Output\n\`\`\`\n${planOutput}\n\`\`\``
+            })
+
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: contains(fromJson('["refs/heads/main", "refs/heads/staging", "refs/heads/develop"]'), github.ref)   && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'destroy')  )
         run: |
-          terraform apply -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+          terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=${{ needs.build-and-push.outputs.environment }}" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+          echo "============================== API ENDPOINT BELOW ==================================="
+          terraform output api_endpoint
+          echo "============================== API ENDPOINT ABOVE ==================================="
+
+      - name: Terraform Destroy
+        if: (!contains(fromJson('["refs/heads/main", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
+        run: |
+          terraform destroy -var "git_branch=${{ github.ref_name }}" -var "environment=${{ needs.build-and-push.outputs.environment }}" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
           terraform output api_endpoint
           echo "============================== API ENDPOINT ABOVE ==================================="
