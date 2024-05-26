@@ -8,13 +8,7 @@ terraform {
     }
   }
 
-  backend "remote" {
-    hostname     = "app.terraform.io"
-    organization = "base-mc-test"
-
-    workspaces {
-      name = "base-eng-test"
-    }
+  backend "s3" {
   }
 }
 

@@ -69,6 +69,12 @@ variable "environment" {
   type        = string
   default     = "npe"
 }
+
+variable "git_branch" {
+  description = "The git branch the function was built from."
+  type        = string
+  default     = "develop"
+}
 /*
 variable "image_uri" {
   description = "The uri of the container image, set during build in github actions."
