@@ -1,11 +1,11 @@
-name: "Build Test deploy prod"
+name: "Build Test deploy uat"
 on:
   push:
     branches:
-      - main
+      - staging
   pull_request:
     branches:
-      - main
+      - staging
   workflow_dispatch:
     inputs:
       deploy_type:
@@ -36,8 +36,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-            pip install pytest
-            pip install -r requirements.txt
+        pip install pytest
+        pip install -r requirements.txt
 
     - name: Test with pytest
       run:  pytest
@@ -52,7 +52,7 @@ jobs:
         aws-region: ${{ secrets.REGION }}
 
     - name: Deploy to S3
-      run: aws s3 cp function.zip s3://${{ vars.FUNCTION_BUCKET }}/prod/${{ github.ref_name }}-function.zip
+      run: aws s3 cp function.zip s3://${{ vars.FUNCTION_BUCKET }}/uat/${{ github.ref_name }}-function.zip
     
     - name: Pass source code path
       id: pass_path
@@ -65,9 +65,11 @@ jobs:
         
     outputs:
         filepath: ${{ steps.set_path.outputs.filepath }}
+        
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    
     permissions:
       contents: read
       packages: write
@@ -83,7 +85,7 @@ jobs:
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: ${{ secrets.ACTION_ROLE }} 
+          role-to-assume: ${{ secrets.ACTION_ROLE }} # I would change the value in the set env vars step higher up
           aws-region: ${{ secrets.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
@@ -100,7 +102,7 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: ${{ secrets.PROD_STATE_BUCKET }}
+          AWS_BUCKET_NAME: ${{ secrets.UAT_STATE_BUCKET }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
@@ -110,7 +112,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
+        run: terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=uat" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -135,7 +137,7 @@ jobs:
       - name: Terraform Apply
         if: contains(fromJson('["refs/heads/main", "refs/heads/staging", "refs/heads/develop"]'), github.ref)   && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'plan')  )
         run: |
-          terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+          terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=uat" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
           terraform output api_endpoint
           echo "============================== API ENDPOINT ABOVE ==================================="
@@ -143,7 +145,7 @@ jobs:
       - name: Terraform Destroy
         if: (!contains(fromJson('["refs/heads/main", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
         run: |
-          terraform destroy -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+          terraform destroy -var "git_branch=${{ github.ref_name }}" -var "environment=uat" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
           echo "============================== API ENDPOINT BELOW ==================================="
           terraform output api_endpoint
           echo "============================== API ENDPOINT ABOVE ==================================="
