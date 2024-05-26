@@ -73,7 +73,7 @@ variable "environment" {
 variable "git_branch" {
   description = "The git branch the function was built from."
   type        = string
-  default     = null
+  default     = "develop"
 }
 /*
 variable "image_uri" {

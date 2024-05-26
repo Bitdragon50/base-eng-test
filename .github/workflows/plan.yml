@@ -1,11 +1,5 @@
-name: "Build and Test"
+name: "Plan"
 on:
-  push:
-    branches:
-      - staging
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       environment:
@@ -15,7 +9,6 @@ on:
       path_to_function:
         description: 'The path to the function code in s3'
         required: true
-        default: 'npe'
 permissions:
       id-token: write 
       contents: read 
@@ -61,7 +54,7 @@ jobs:
             AWS_BUCKET_NAME: ${{ secrets.NPE_STATE_BUCKET }}
             AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
-        
+
       - name: Terraform Init UAT
         if: inputs.environment == 'uat'
         env:

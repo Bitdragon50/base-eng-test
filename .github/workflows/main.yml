@@ -1,11 +1,11 @@
-name: "Build and Test"
+name: "Build Test deploy prod"
 on:
   push:
     branches:
       - main
   pull_request:
     branches:
-        - main
+      - main
   workflow_dispatch:
     inputs:
       deploy_type:
@@ -110,7 +110,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
+        run: terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
