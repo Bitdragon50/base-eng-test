@@ -74,6 +74,8 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      issues: write
+      pull-requests: write
     defaults:
       run:
         shell: bash
