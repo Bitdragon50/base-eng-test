@@ -121,6 +121,13 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v2
+        if: steps.plan.outcome != 'failure'
+        with:
+          name: plan-output
+          path: plan-output.txt
+
       - name: Comment Terraform Plan on PR
         if: github.event_name == 'pull_request' && steps.plan.outcome != 'failure'
         uses: actions/github-script@v6
@@ -128,7 +135,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const planOutput = fs.readFileSync('plan-output.txt', 'utf8');
+            const planOutput = fs.readFileSync('${{ github.workspace }}/plan-output.txt', 'utf8');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
