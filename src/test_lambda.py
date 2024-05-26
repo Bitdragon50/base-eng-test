@@ -2,7 +2,7 @@ import json
 from unittest.mock import patch, MagicMock
 from main import lambda_handler
 
-@patch('your_lambda_file.logger')
+@patch('main.logger')
 def test_lambda_handler_how_are_you(mock_logger):
     event = {'body': json.dumps({'question': 'How are you?'})}
     context = MagicMock()
@@ -18,7 +18,7 @@ def test_lambda_handler_how_are_you(mock_logger):
     assert response == expected_response
     mock_logger.info.assert_called_with(expected_response)
 
-@patch('your_lambda_file.logger')
+@patch('main.logger')
 def test_lambda_handler_whats_your_name(mock_logger):
     event = {'body': json.dumps({'question': 'Whats your name?'})}
     context = MagicMock()
@@ -36,7 +36,7 @@ def test_lambda_handler_whats_your_name(mock_logger):
 
 # ... Repeat for each case in your match statement ...
 
-@patch('your_lambda_file.logger')
+@patch('main.logger')
 def test_lambda_handler_invalid_question(mock_logger):
     event = {'body': json.dumps({'question': 'Invalid question?'})}
     context = MagicMock()
