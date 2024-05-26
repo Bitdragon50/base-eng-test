@@ -50,18 +50,17 @@ jobs:
 
     - name: Deploy to S3
       run: aws s3 cp function.zip s3://${{ vars.FUNCTION_BUCKET }}/npe/${{ github.ref_name }}-function.zip
-    
+
     - name: Pass source code path
       id: pass_path
       run: |
-          echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_OUTPUT
-    - name: Set the path
-      id: set_path
-      run: |
-        echo "name=$filepath" >> $GITHUB_OUTPUT
-        
+          echo "filepath=$(echo ${{ vars.FUNCTION_BUCKET }})" >> $GITHUB_ENV
+
+    - name: Set the tag
+      id: set_tag
+      run: echo "::set-output name=filepath::$filepath"
     outputs:
-        filepath: ${{ steps.set_path.outputs.filepath }}
+        filepath: ${{ steps.set_tag.outputs.filepath }}
         
   deploy:
     needs: build-and-push
