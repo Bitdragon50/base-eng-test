@@ -76,25 +76,31 @@ jobs:
         shell: bash
         working-directory: ./infrastructure
     steps:
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3        
 
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }} 
           aws-region: ${{ secrets.REGION }}
-          role-session-name: GitHub-OIDC-TERRAFORM
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.3
+          role-session-name: GitHub-OIDC-TERRAFORM         
 
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check 
         continue-on-error: true
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM   
 
       - name: Terraform Init
         id: init
@@ -107,6 +113,13 @@ jobs:
         id: validate
         run: terraform validate -no-color
 
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }}
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM   
+
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}"
@@ -115,7 +128,7 @@ jobs:
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
-
+        
       - name: Comment Terraform Plan on PR
         if: github.event_name == 'pull_request' && steps.plan.outcome != 'failure'
         uses: actions/github-script@v6
@@ -143,6 +156,7 @@ jobs:
         if: (!contains(fromJson('["refs/heads/main", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
         run: |
           terraform destroy -var "git_branch=${{ github.ref_name }}" -var "environment=prod" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
+
           echo "============================== API ENDPOINT BELOW ==================================="
           terraform output api_endpoint
           echo "============================== API ENDPOINT ABOVE ==================================="
