@@ -1,0 +1,91 @@
+name: "Build and Test"
+on:
+  push:
+    branches:
+      - staging
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select the environment from: [npe,uat,prd]'
+        required: true
+        default: 'npe'
+      path_to_function:
+        description: 'The path to the function code in s3'
+        required: true
+        default: 'npe'
+permissions:
+      id-token: write 
+      contents: read 
+      pull-requests: write 
+env:
+  TF_LOG: INFO
+jobs:        
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infrastructure
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }} # I would change the value in the set env vars step higher up
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.3
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check 
+        continue-on-error: true
+
+      - name: Terraform Init NPE
+        if: inputs.environment == 'npe'
+        env:
+            AWS_BUCKET_NAME: ${{ secrets.NPE_STATE_BUCKET }}
+            AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+        
+      - name: Terraform Init UAT
+        if: inputs.environment == 'uat'
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.UAT_STATE_BUCKET }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Init prd
+        if: inputs.environment == 'prd'
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.PROD_STATE_BUCKET }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -var "environment=${{ inputs.environment }}" -var "filepath=${{ inputs.path_to_function }}"
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+        

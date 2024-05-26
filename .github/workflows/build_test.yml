@@ -1,0 +1,38 @@
+name: "Build and Test"
+on:
+  push:
+
+  pull_request:
+       
+permissions:
+      id-token: write 
+      contents: read 
+      pull-requests: write 
+env:
+  TF_LOG: INFO
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./src
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        pip install pytest
+        pip install -r requirements.txt
+    - name: Test with pytest
+      run: |
+        pytest
+  
+    - name: Package Lambda function
+      run: zip -r function.zip .
