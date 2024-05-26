@@ -114,7 +114,7 @@ jobs:
         id: plan
         run: |
          echo $PWD
-         terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=npe" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" | tee $PWD/plan-output.txt
+         terraform plan -no-color -var "git_branch=${{ github.ref_name }}" -var "environment=npe" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" | tee ${{ github.workspace }}/plan-output.txt
         continue-on-error: true
 
       - name: Terraform Plan Status
