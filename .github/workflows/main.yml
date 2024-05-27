@@ -46,7 +46,7 @@ jobs:
       run: |
        zip -r ../function.zip .
        cd ..
-       zip -g function.zip main.py
+       zip -g ./src/function.zip ./src/main.py
        cd ./src
       
     - name: Configure AWS credentials from AWS account
