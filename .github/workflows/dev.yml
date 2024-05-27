@@ -166,6 +166,6 @@ jobs:
           echo "============================== API ENDPOINT ABOVE ==================================="
 
       - name: Terraform Destroy
-        if: (!contains(fromJson('["refs/heads/develop", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
+        if: (!contains(fromJson('["refs/heads/main", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
         run: |
           terraform destroy -var "git_branch=${{ github.ref_name }}" -var "environment=npe" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
