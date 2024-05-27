@@ -43,7 +43,9 @@ jobs:
       run:  pytest
   
     - name: Package Lambda function
-      run: zip -r function.zip .
+      run: |
+       zip -r function.zip .
+       zip -g function.zip main.py
       
     - name: Configure AWS credentials from AWS account
       uses: aws-actions/configure-aws-credentials@v3
