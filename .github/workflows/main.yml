@@ -36,20 +36,21 @@ jobs:
 
     - name: Install dependencies
       run: |
+            python -m venv myenv
+            myenv\Scripts\activate
             pip install pytest
-            cd ..
-            pip install -r requirements.txt ./src
-            cd ./src
+            pip install -r requirements.txt
+            deactivate
 
     - name: Test with pytest
       run:  pytest
   
     - name: Package Lambda function
       run: |
-       zip -r ../function.zip .
-       cd ..
-       zip -g ./src/function.zip ./src/main.py
-       cd ./src
+       zip -r9 function.zip ./myenv/lib/python3.10/site-packages/       
+       zip -g ./function.zip ./main.py       
+       zip -g ./function.zip ./Pipfile       
+       zip -g ./function.zip ./Pipfile.lock
       
     - name: Configure AWS credentials from AWS account
       uses: aws-actions/configure-aws-credentials@v3
