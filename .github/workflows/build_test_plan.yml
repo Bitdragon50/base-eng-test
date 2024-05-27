@@ -1,0 +1,135 @@
+name: "Build Test Plan"
+on:
+  push:
+    branches-ignore:
+      - main
+      - staging
+      - develop
+
+  pull_request:
+    branches-ignore:
+      - main
+      - staging
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select the environment from: [npe,uat,prd]'
+        required: true
+        default: 'npe'       
+permissions:
+      id-token: write 
+      contents: read 
+      pull-requests: write 
+env:
+  TF_LOG: INFO
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./src
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+            python -m venv myenv
+            source ./myenv/bin/activate
+            pip install -r requirements.txt
+            deactivate
+
+    - name: Test with pytest
+      run: |
+            pip install -r requirements.txt
+            pip install pytest 
+            pytest
+  
+    - name: Package Lambda function
+      run: |
+        cd myenv/lib/python3.10/site-packages/ 
+        zip -r ../../../../function.zip .
+        cd ../../../../
+        zip -g ./function.zip main.py       
+        zip -g ./function.zip Pipfile       
+        zip -g ./function.zip Pipfile.lock
+  plan:
+    runs-on: ubuntu-latest    
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infrastructure
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.ACTION_ROLE }} 
+          aws-region: ${{ secrets.REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.3
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check 
+        continue-on-error: true
+
+      - name: Terraform Init NPE
+        if: inputs.environment == 'npe' || github.event_name == 'push'
+        env:
+            ENVIRONMENT: "npe"
+            AWS_BUCKET_NAME: ${{ secrets.NPE_STATE_BUCKET }}
+            AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: |
+            echo "environment=uat" >> $GITHUB_ENV
+            terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Init UAT
+        if: inputs.environment == 'uat'
+        env:
+          ENVIRONMENT: "uat"
+          AWS_BUCKET_NAME: ${{ secrets.UAT_STATE_BUCKET }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: |
+            echo "environment=uat" >> $GITHUB_ENV
+            terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Init prd
+        if: inputs.environment == 'prd'
+        env:
+          ENVIRONMENT: "prd"
+          AWS_BUCKET_NAME: ${{ secrets.PROD_STATE_BUCKET }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+        run: |
+            echo "environment=prd" >> $GITHUB_ENV
+            terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -var "environment=$environment" -var "filepath=${{ vars.FUNCTION_BUCKET }}"
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
