@@ -39,7 +39,7 @@ jobs:
             python -m venv myenv
             cd myenv
             ls -la
-            myenv\Scripts\activate
+            myenv\bin\activate
             pip install pytest
             pip install -r requirements.txt
             deactivate
@@ -49,10 +49,12 @@ jobs:
   
     - name: Package Lambda function
       run: |
-       zip -r9 function.zip ./myenv/lib/python3.10/site-packages/       
-       zip -g ./function.zip ./main.py       
-       zip -g ./function.zip ./Pipfile       
-       zip -g ./function.zip ./Pipfile.lock
+       cd myenv/lib/python3.10/site-packages/ 
+       zip -r ../../../../function.zip .
+       cd ../../../../
+       zip -g ./function.zip main.py       
+       zip -g ./function.zip Pipfile       
+       zip -g ./function.zip Pipfile.lock
       
     - name: Configure AWS credentials from AWS account
       uses: aws-actions/configure-aws-credentials@v3
