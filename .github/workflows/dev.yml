@@ -17,6 +17,7 @@ env:
   TF_LOG: INFO
 jobs:
   build-and-push:
+    if: inputs.deploy_type != 'destroy' || inputs.deploy_type != 'plan'
     runs-on: ubuntu-latest
     defaults:
       run:
