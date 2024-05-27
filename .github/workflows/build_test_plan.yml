@@ -60,9 +60,8 @@ jobs:
         zip -g ./function.zip main.py       
         zip -g ./function.zip Pipfile       
         zip -g ./function.zip Pipfile.lock
-  deploy:
-    runs-on: ubuntu-latest
-    
+  plan:
+    runs-on: ubuntu-latest    
     permissions:
       contents: read
       packages: write
