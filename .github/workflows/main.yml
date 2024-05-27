@@ -37,7 +37,9 @@ jobs:
     - name: Install dependencies
       run: |
             pip install pytest
+            cd ..
             pip install -r requirements.txt ./src
+            cd ./src
 
     - name: Test with pytest
       run:  pytest
