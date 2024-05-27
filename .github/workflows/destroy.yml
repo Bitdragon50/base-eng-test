@@ -24,12 +24,29 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
 
-    - name: Terraform Init
+    - name: Terraform Init Destroy PRD
+      if: github.ref_name == 'main'
+      id: init_prod
+      env:
+        AWS_BUCKET_NAME: ${{ secrets.PROD_STATE_BUCKET }}
+        AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+      run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+    - name: Terraform Init Destroy UAT
+      if: github.ref_name == 'staging'
+      id: init_uat
+      env:
+        AWS_BUCKET_NAME: ${{ secrets.UAT_STATE_BUCKET }}
+        AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+      run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+    - name: Terraform Init Destroy NPE
+      if: github.ref_name == 'develop'
       id: init
       env:
-        TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-        AWS_REGION: ${{ secrets.REGION }}
-      run: terraform init 
+        AWS_BUCKET_NAME: ${{ secrets.NPE_STATE_BUCKET }}
+        AWS_BUCKET_KEY_NAME: ${{ secrets.STATE_BUCKET_KEY }}
+      run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
     - name: Terraform Plan
       id: plan
