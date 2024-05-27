@@ -3,6 +3,6 @@
 *.tfstate.backup
 *.zip
 *.sh
-*.vs
+*.vs*
 *__py*
 *.pytest*

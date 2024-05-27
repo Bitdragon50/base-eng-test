@@ -10,7 +10,7 @@ class AppConfig:
     """
     Application configuration class. This class is used to set global variables.
     """
-    logger.level        = os.environ.get('LOG_LEVEL') or 'INFO'
+    logger.level        = os.environ.get('LOG_LEVEL') or 'INFO' # type: ignore #
 
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext):
