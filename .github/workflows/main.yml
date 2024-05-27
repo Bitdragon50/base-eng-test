@@ -43,7 +43,9 @@ jobs:
             deactivate
 
     - name: Test with pytest
-      run:  pytest
+      run: |
+       ls -la
+       python run pytest
   
     - name: Package Lambda function
       run: |
