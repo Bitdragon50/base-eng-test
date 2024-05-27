@@ -1,8 +1,16 @@
 name: "Build and Test"
 on:
   push:
+    branches-ignore:
+      - main
+      - staging
+      - develop
 
   pull_request:
+    branches-ignore:
+      - main
+      - staging
+      - develop
        
 permissions:
       id-token: write 
