@@ -75,16 +75,3 @@ variable "git_branch" {
   type        = string
   default     = "develop"
 }
-/*
-variable "image_uri" {
-  description = "The uri of the container image, set during build in github actions."
-  type        = string
-}
-
-
-variable "function_bucket" {
-  description = "The uri of the container image, set during build in github actions."
-  type        = string
-
-}
-*/
