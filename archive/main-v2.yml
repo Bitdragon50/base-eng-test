@@ -69,7 +69,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }}
-          aws-region: ${{ secrets.REGION }}
+          aws-region: ${{ vars.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
       - name: Setup Terraform
