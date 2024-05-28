@@ -33,8 +33,7 @@ def test_lambda_handler_whats_your_name(mock_logger):
     response = lambda_handler(event, context)
     assert response == expected_response
     mock_logger.info.assert_called_with(expected_response)
-
-# ... Repeat for each case in your match statement ...
+    
 
 @patch('main.logger')
 def test_lambda_handler_invalid_question(mock_logger):
