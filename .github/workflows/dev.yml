@@ -160,7 +160,6 @@ jobs:
         if:  (github.event_name == 'push') && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'plan'))
         run: |
           terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=npe" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
-          terraform show api_endpoint
           terraform output api_endpoint | sed 's/./& /g' | sed 's/ //g'
           api_endpoint=$(terraform output api_endpoint | sed 's/./& /g')
           echo "============================== API ENDPOINT BELOW ==================================="
