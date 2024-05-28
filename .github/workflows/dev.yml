@@ -61,7 +61,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v3
       with:
         role-to-assume: ${{ secrets.ACTION_ROLE }} 
-        aws-region: ${{ secrets.REGION }}
+        aws-region: ${{ vars.REGION }}
 
     - name: Deploy to S3
       if: inputs.deploy_type != 'destroy' && inputs.deploy_type != 'plan'
@@ -100,7 +100,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }} # I would change the value in the set env vars step higher up
-          aws-region: ${{ secrets.REGION }}
+          aws-region: ${{ vars.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
       - name: Setup Terraform
@@ -160,11 +160,7 @@ jobs:
         if:  (github.event_name == 'push') && (!(inputs.deploy_type == 'destroy') || !(inputs.deploy_type == 'plan'))
         run: |
           terraform apply -var "git_branch=${{ github.ref_name }}" -var "environment=npe" -var "filepath=${{ needs.build-and-push.outputs.filepath }}" -auto-approve -input=false
-          api_endpoint=$(terraform output api_endpoint )
-          echo "============================== API ENDPOINT BELOW ==================================="
-          echo $api_endpoint
-          echo "============================== API ENDPOINT ABOVE ==================================="
-
+          
       - name: Terraform Destroy
         if: (!contains(fromJson('["refs/heads/main", "refs/heads/staging"]'), github.ref)  && inputs.deploy_type == 'destroy')
         run: |
