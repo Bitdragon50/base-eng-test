@@ -61,7 +61,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v3
       with:
         role-to-assume: ${{ secrets.ACTION_ROLE }} 
-        aws-region: ${{ secrets.REGION }}
+        aws-region: ${{ vars.REGION }}
 
     - name: Deploy to S3
       if: inputs.deploy_type != 'destroy' && inputs.deploy_type != 'plan'
@@ -100,7 +100,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.ACTION_ROLE }} # I would change the value in the set env vars step higher up
-          aws-region: ${{ secrets.REGION }}
+          aws-region: ${{ vars.REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
       - name: Setup Terraform
